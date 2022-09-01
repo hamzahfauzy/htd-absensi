@@ -12,9 +12,9 @@ if(startWith($route,'api'))
     header("Content-Type: application/json");
 }
 
-if(startWith($route,'iot'))
+if(startWith($route,'iot/'))
 {
-    return '../before-actions/iot.php';
+    return require '../before-actions/iot.php';
 }
 
 // check if installation is exists
