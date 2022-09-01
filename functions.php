@@ -552,3 +552,8 @@ function get_route_path($path, $params)
     $fullpath = $path . ($pretty ? '?' : '&') . http_build_query($params);
     return $fullpath;
 }
+
+function iot_response($text)
+{
+    return "<response>$text</response>";
+}

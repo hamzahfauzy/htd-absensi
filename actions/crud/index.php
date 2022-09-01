@@ -1,7 +1,7 @@
 <?php
 
 $table = $_GET['table'];
-Page::set_title(ucwords($table));
+Page::set_title(_ucwords(__($table)));
 $conn = conn();
 $db   = new Database($conn);
 $success_msg = get_flash_msg('success');
@@ -40,12 +40,21 @@ if(isset($_GET['draw']))
         $where = "(".implode(' OR ',$_where).")";
     }
 
-    $data  = $db->all($table,$where,[
-        $columns[$order[0]['column']] => $order[0]['dir']
-    ]);
-    $total = $db->exists($table,$where,[
-        $columns[$order[0]['column']] => $order[0]['dir']
-    ]);
+    if(file_exists('../actions/'.$table.'/override-index.php'))
+    {
+        $override = require '../actions/'.$table.'/override-index.php';
+        extract($override);
+    }
+    else
+    {
+        $data  = $db->all($table,$where,[
+            $columns[$order[0]['column']] => $order[0]['dir']
+        ]);
+        $total = $db->exists($table,$where,[
+            $columns[$order[0]['column']] => $order[0]['dir']
+        ]);
+    }
+
     $results = [];
 
     foreach($data as $key => $d)
@@ -91,12 +100,7 @@ if(isset($_GET['draw']))
     die();
 }
 
-// $data = $db->all($table);
-// if(file_exists('../actions/'.$table.'/override-index.php'))
-//     $data = require '../actions/'.$table.'/override-index.php';
-
 return [
-    'datas' => $data,
     'table' => $table,
     'success_msg' => $success_msg,
     'fields' => $fields

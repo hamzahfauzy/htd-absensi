@@ -30,6 +30,28 @@ if(request() == 'POST')
         'route_path' => '*'
     ]);
 
+    $roles = [
+        'user' => [
+            'default/*',
+            'presences/index'
+        ]
+    ];
+
+    foreach($roles as $name => $routes)
+    {
+        $role = $db->insert('roles',[
+            'name' => $name
+        ]);
+
+        foreach($routes as $route)
+        {
+            $db->insert('role_routes',[
+                'role_id' => $role->id,
+                'route_path' => $route
+            ]);
+        }
+    }
+
     set_flash_msg(['success'=>'Instalasi Berhasil']);
     header('location:'.routeTo('auth/login'));
     die();

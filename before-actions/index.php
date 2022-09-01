@@ -12,6 +12,11 @@ if(startWith($route,'api'))
     header("Content-Type: application/json");
 }
 
+if(startWith($route,'iot'))
+{
+    return '../before-actions/iot.php';
+}
+
 // check if installation is exists
 $conn  = conn();
 $db    = new Database($conn);
