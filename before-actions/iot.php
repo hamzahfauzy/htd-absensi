@@ -18,7 +18,7 @@ $db    = new Database($conn);
 $serial_number = $_GET['serial_number'];
 $device = $db->single('devices',['serial_number' => $serial_number]);
 
-if(empty($device))
+if(!$device)
 {
     echo iot_response('Unauthorized');
     return false;
@@ -27,7 +27,7 @@ if(empty($device))
 $code = $_GET['code'];
 $subject = $db->single('subjects',['presence_code'=>$code]);
 
-if(empty($subject))
+if(!$subject)
 {
     echo iot_response('Unauthorized');
     return false;
