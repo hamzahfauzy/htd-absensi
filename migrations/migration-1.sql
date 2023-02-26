@@ -1,0 +1,2 @@
+ALTER TABLE presences ADD COLUMN status VARCHAR(45) DEFAULT "Hadir";
+ALTER TABLE presences ADD COLUMN description TEXT DEFAULT NULL

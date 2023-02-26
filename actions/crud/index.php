@@ -19,26 +19,29 @@ if(isset($_GET['draw']))
     $order   = $_GET['order'];
     
     $columns = [];
+    $search_columns = [];
     foreach($fields as $key => $field)
     {
         $columns[] = is_array($field) ? $key : $field;
+        if(is_array($field) && isset($field['search']) && !$field['search']) continue;
+        $search_columns[] = is_array($field) ? $key : $field;
     }
-
-    // $order_by = " ORDER BY ".$columns[$order[0]['column']]." ".$order[0]['dir'];
 
     $where = "";
 
     if(!empty($search))
     {
-        // $where = "WHERE (NIK LIKE '%$search%' OR no_kk LIKE '%$search%' OR nama LIKE '%$search%' OR alamat LIKE '%$search%')";
         $_where = [];
-        foreach($columns as $col)
+        foreach($search_columns as $col)
         {
             $_where[] = "$col LIKE '%$search%'";
         }
 
-        $where = "(".implode(' OR ',$_where).")";
+        $where = "WHERE (".implode(' OR ',$_where).")";
     }
+
+    $col_order = $order[0]['column']-1;
+    $col_order = $col_order < 0 ? 'id' : $columns[$col_order];
 
     if(file_exists('../actions/'.$table.'/override-index.php'))
     {
@@ -47,22 +50,30 @@ if(isset($_GET['draw']))
     }
     else
     {
-        $data  = $db->all($table,$where,[
-            $columns[$order[0]['column']] => $order[0]['dir']
-        ]);
+        $db->query = "SELECT * FROM $table $where ORDER BY ".$col_order." ".$order[0]['dir']." LIMIT $start,$length";
+        $data  = $db->exec('all');
+
         $total = $db->exists($table,$where,[
-            $columns[$order[0]['column']] => $order[0]['dir']
+            $col_order => $order[0]['dir']
         ]);
     }
 
     $results = [];
-
+    
     foreach($data as $key => $d)
     {
         $results[$key][] = $key+1;
         foreach($columns as $col)
         {
-            $field = $fields[$col];
+            $field = '';
+            if(isset($fields[$col]))
+            {
+                $field = $fields[$col];
+            }
+            else
+            {
+                $field = $col;
+            }
             $data_value = "";
             if(is_array($field))
             {
@@ -70,6 +81,11 @@ if(isset($_GET['draw']))
                 if($field['type'] == 'number')
                 {
                     $data_value = number_format($data_value);
+                }
+
+                if($field['type'] == 'file')
+                {
+                    $data_value = '<a href="'.asset($data_value).'" target="_blank">Lihat File</a>';
                 }
             }
             else
@@ -81,6 +97,11 @@ if(isset($_GET['draw']))
         }
 
         $action = '';
+        if(file_exists('../actions/'.$table.'/action-button.php'))
+        {
+            // $table, $d (data object)
+            $action .= require '../actions/'.$table.'/action-button.php';
+        }
         if(is_allowed(get_route_path('crud/edit',['table'=>$table]),auth()->user->id)):
             $action .= '<a href="'.routeTo('crud/edit',['table'=>$table,'id'=>$d->id]).'" class="btn btn-sm btn-warning"><i class="fas fa-pencil-alt"></i> Edit</a>';
         endif;

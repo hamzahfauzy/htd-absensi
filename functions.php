@@ -77,16 +77,69 @@ function generated_menu($user_id)
 
             foreach($route as $label => $submenu)
             {
-                if($user_id != 'guest' && !is_allowed($submenu,$user_id)) continue;
-                $allowed = true;
-                $start_route = str_replace('/index','',$submenu);
-                if(!$active)
-                    $active = startWith($r, $start_route)||(isset($_GET['table'])&&$_GET['table']==$key);;
-                $dropdown .= '<li class="'.(startWith($r, $start_route)?'active':'').'">
-                                <a href="'.routeTo().$submenu.'">
-                                    <span class="sub-item">'.ucwords($label).'</span>
-                                </a>
-                            </li>';
+                if(is_array($submenu))
+                {
+                    $_dropdown = '';
+                    $_active = false;
+                    foreach($submenu as $label_submenu => $sub_submenu)
+                    {
+                        if($user_id != 'guest' && !is_allowed($sub_submenu,$user_id)) continue;
+                        $allowed = true;
+                        $start_route = $sub_submenu; // str_replace('/index','',$submenu);
+                        if(!$active)
+                        {
+                            $active = startWith($r, $start_route)||(isset($_GET['table'])&&$_GET['table']==$key);
+                            $_active = $active;
+                        }
+                        $_dropdown .= '<li class="'.(startWith($r, $start_route)?'active':'').'">
+                            <a href="'.routeTo().$sub_submenu.'">
+                                <span class="sub-item">'.ucwords($label_submenu).'</span>
+                            </a>
+                        </li>';
+                    }
+
+                    $dropdown .= '<li class="'.($active && $_active?'submenu':'').'">
+                                    <a data-toggle="collapse" href="#'.str_replace(' ','_',$key).array_search($submenu, array_values($route)).'" aria-expanded="'.($active && $_active?'true':'').'">
+                                        <span class="sub-item">'.ucwords($label).'</span>
+                                        <span class="caret"></span>
+                                    </a>
+                                    <div class="collapse '.($active && $_active?'show':'').'" id="'.str_replace(' ','_',$key).array_search($submenu, array_values($route)).'">
+                                        <ul class="nav nav-collapse subnav">
+                                        '.$_dropdown.'
+                                        </ul>
+                                    </div>
+                                </li>';
+
+                }
+                else
+                {
+                    if($user_id != 'guest' && !is_allowed($submenu,$user_id)) continue;
+                    $allowed = true;
+                    $start_route = $submenu; // str_replace('/index','',$submenu);
+                    
+                    $base_route  = explode('?',$submenu);
+                    $start_route = str_replace('/index','',$base_route[0]);
+                    $url = routeTo('') . $submenu;
+                    $url = parse_url($url);
+                    $table = '';
+                    if(isset($url['query']))
+                    {
+                        parse_str($url['query'], $params); 
+                        $table = isset($params['table']) ? $params['table'] : '';
+                    }
+
+                    if(!$active)
+                    {
+                        $active = ($start_route != 'crud' ? startWith($r, $submenu) : (isset($_GET['table'])&&($_GET['table']==$key||$_GET['table']==$table)));
+                    }
+                    
+                    $submenu_active = ($start_route != 'crud' ? startWith($r, $submenu) : (isset($_GET['table'])&&($_GET['table']==$key||$_GET['table']==$table)));
+                    $dropdown .= '<li class="'.($submenu_active?'active':'').'">
+                                    <a href="'.routeTo().$submenu.'">
+                                        <span class="sub-item">'.ucwords($label).'</span>
+                                    </a>
+                                </li>';
+                }
             }
 
             $dropdown = '<li class="nav-item '.($active?'active submenu':'').'">
@@ -107,8 +160,20 @@ function generated_menu($user_id)
         else
         {
             if($user_id != 'guest' && !is_allowed($route,$user_id)) continue;
-            $start_route = str_replace('/index','',$route);
-            $active = startWith($r, $start_route)||(isset($_GET['table'])&&$_GET['table']==$key);;
+            $base_route  = explode('?',$route);
+            $start_route = str_replace('/index','',$base_route[0]);
+            $url = routeTo('') . $route;
+            $url = parse_url($url);
+            $table = '';
+            if(isset($url['query']))
+            {
+                parse_str($url['query'], $params); 
+                $table = isset($params['table']) ? $params['table'] : '';
+            }
+
+            $active = ($start_route != 'crud' ? startWith($r, $start_route) : (isset($_GET['table'])&&($_GET['table']==$key||$_GET['table']==$table)));
+
+            
             $generated .= '<li class="nav-item '.($active?'active':'').'">
                                 <a href="'.routeTo().$route.'">
                                     <i class="'.$icon[$key].'"></i>

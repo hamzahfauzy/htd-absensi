@@ -68,6 +68,14 @@ return [
             'label' => 'Jadwal',
             'type'  => 'options-obj:schedules,id,name'
         ],
+        'status' => [
+            'label' => 'Status',
+            'type' => 'options:Hadir|Tidak Hadir'
+        ],
+        'description' => [
+            'label' => 'Catatan',
+            'type' => 'textarea'
+        ],
         'created_at' => [
             'label' => 'Tanggal',
             'type'  => 'datetime-local'
